@@ -1,17 +1,32 @@
 const { exec } = require("child_process");
 
 const login = () => {
-    exec("osprey user login", (error, stdout, stderr) => {
-        if (error) {
-            console.log(`Error logging in with osprey: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return;
-        }
-        console.log(`stdout: ${stdout}`);        
-    });   
+    return new Promise(function(resolve, reject){
+        exec("osprey user login", (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error logging in with osprey: ${error.message}`);
+                reject({
+                    success: false,
+                    error: error.message
+                })
+                return;
+            }
+            
+            if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                reject({
+                    success: false,
+                    error: stderr
+                })
+                return;
+            }
+            
+            console.log(`stdout: ${stdout}`);
+            resolve({
+                success: true
+            })       
+        });  
+     })
 }
 
 const getNamespaces = () => {
