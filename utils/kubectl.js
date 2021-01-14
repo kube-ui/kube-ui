@@ -1,11 +1,21 @@
 const { exec } = require("child_process");
 
 const login = () => {
-    
+    exec("osprey user login", (error, stdout, stderr) => {
+        if (error) {
+            console.log(`Error logging in with osprey: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);        
+    });   
 }
 
-const getPods = () => {
-    exec("kubectl --context=dev get namespaces -o json", (error, stdout, stderr) => {
+const getNamespaces = () => {
+    exec("kubectl --context=dev get namespaces -o json", {maxBuffer: 1024 * 5000}, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);
             return;
@@ -14,12 +24,29 @@ const getPods = () => {
             console.log(`stderr: ${stderr}`);
             return;
         }
-        console.log(`stdout: ${stdout}`);
+
+        const result = JSON.parse(stdout);
+
+
+        const data = result.items.map(item => {
+            return {
+                "name": item.metadata.name,
+                "team": item.metadata.labels.team,
+                "area": item.metadata.labels['area-name'],
+                "slack": item.metadata.annotations.slack    
+            }
+        });
+
+
+        // const stringifiedJson = JSON.stringify(data)
+        // console.log(`stdout: ${stdout}`);
+        // console.log(`${stringifiedJson}`);
+        return data;
     });
 }
 
-const getPods = (context= "dev", namepsace) => {
-    exec(`kubectl --context=dev --namespace=${namepsace} get po -o json`, (error, stdout, stderr) => {
+const getPods = (namespace) => {
+    exec(`kubectl --context=dev --namespace=${namespace} get po -o json`, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);
             return;
@@ -28,15 +55,26 @@ const getPods = (context= "dev", namepsace) => {
             console.log(`stderr: ${stderr}`);
             return;
         }
-        console.log(`stdout: ${stdout}`);
 
-        const result = JSON.parse(stdout)
-        const data = {
-            status: result.status
-        }
+        const result = JSON.parse(stdout);
+
+        const data = result.items.map(item => {
+            return {
+                "name": item.metadata.labels['app.kubernetes.io/name'],
+                "status": item.status.phase,
+                "startTime": item.status.startTime  
+            }
+        });
+        
+        // const stringifiedJson = JSON.stringify(data)
+        // console.log(stringifiedJson)
+        return data;
+
     });
 }
 
 module.exports = {
+    login,
+    getNamespaces,
     getPods
 }
