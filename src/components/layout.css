@@ -18,8 +18,11 @@ header.app-header {
 }
 
 .app-body {
-  margin: 20px;
-  height: calc(100% - 104px);
+  padding: 20px;
+  /* height: calc(100% - 104px); */
+  height: calc(100% - 65px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .empty-body {
@@ -53,12 +56,27 @@ header.app-header {
     fill: #cdd1d7;
 }
 
-.namespace-item p {
-  margin-bottom: 15px;
+.namespace-item .title {
+  font-size: 18px;
+  color: #CDD1D7;
+  font-weight: bold;
+  line-height: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-body .namespace-details-container, .app-body .namespace-details-container:last-child {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .namespace-details {
   margin-bottom: 15px;
+}
+
+.namespace-details .refresh-icon {
+  padding-right: 0;
 }
 
 .namespace-details .label {

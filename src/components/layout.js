@@ -71,14 +71,17 @@ const Item = ({item, onNamespaceGetDetails}) => {
 
     return (
       <Card className={classes.root} variant="outlined">
-        <CardContent>
-          <Typography
-            className={classes.title}
-            color="textSecondary"
-            gutterBottom
-          >
-            {item.service ? item.service : item.name}
-          </Typography>
+        <CardContent className="namespace-details-container">
+          <Grid className="namespace-details" container justify="space-between">
+            <Grid className="title" item xs={10}>
+              {item.service ? item.service : item.name}
+            </Grid>
+            <Grid className="value" item xs={2}>
+              <IconButton className="refresh-icon" color="primary" aria-label="refresh" component="span" onClick={() => handleNamespaceGetDetails(item.name)}>
+                  <Refresh />
+              </IconButton>
+            </Grid>
+          </Grid>
           
           <Grid className="namespace-details" container justify="space-between">
             <Grid className="label" item xs>Status</Grid>
@@ -94,15 +97,10 @@ const Item = ({item, onNamespaceGetDetails}) => {
           </Grid>
           <Grid className="namespace-details" container justify="space-between">
             <Grid className="label" item xs>Last deployed</Grid>
-            <Grid className="value" item xs>{item['ready-pods']}</Grid>
+            <Grid className="value" item xs>{item['last-deployed']}</Grid>
           </Grid>
 
         </CardContent>
-        <CardActions>
-            <IconButton color="primary" aria-label="refresh" component="span" onClick={() => handleNamespaceGetDetails(item.name)}>
-                <Refresh />
-            </IconButton>
-        </CardActions>
       </Card>
     );
 }

@@ -48,11 +48,15 @@ const App = () => {
 	ipcRenderer.on("namespaces:get", (e, namespaces) => {
 		const result = JSON.parse(namespaces)
 		  .data
+		  .filter(namespace => namespace.name.includes("client-int"))
 		  .slice(1, 11)
 		  .map((item) => {
 			return {
 			  ...item,
 			  slack: item.slack.split("(")[0],
+			  "pods": "-",
+			  "ready-pods": "-",
+			  "last-deployed": "-"
 			};
 		  });
   
