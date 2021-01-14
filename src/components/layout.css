@@ -1,0 +1,73 @@
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1d2438;
+}
+
+header.app-header {
+  background: #628de8;
+}
+
+.app-logo {
+  height: 44px;
+  width: 44px;
+  background-image: url("../assets/logo.png");
+  background-size: cover;
+  margin-right: 20px;
+}
+
+.app-body {
+  margin: 20px;
+  height: calc(100% - 104px);
+}
+
+.empty-body {
+  min-height: 100%;
+  text-align: center;
+}
+
+.empty-body .paper-container {
+  height: 24px;
+  line-height: 24px;
+  color: white;
+}
+
+.makeStyles-paper-6 {
+  background-color: #282F46;
+  padding: 8px;
+  padding-top: 12px;
+}
+
+.filter-container {
+  background-color: #1d2438;
+  color: #cdd1d7;
+}
+
+.filters-right {
+  float: right;
+  color: #cdd1d7;
+}
+
+.namespace-item svg {
+    fill: #cdd1d7;
+}
+
+.namespace-item p {
+  margin-bottom: 15px;
+}
+
+.namespace-details {
+  margin-bottom: 15px;
+}
+
+.namespace-details .label {
+  text-align: left;
+  color: #8f9db8;
+}
+
+.namespace-details .value {
+  text-align: right;
+  color: #cdd1d7;
+  font-weight: bold;
+}

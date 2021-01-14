@@ -1,11 +1,78 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+
+import { Button } from "@material-ui/core";
+import Layout from "./components/layout.js";
+import { ipcRenderer } from "electron";
 
 const App = () => {
-	return (
-		<div className='app'>
-			<h1>KubeUI Boilerplate</h1>
-		</div>
-	)
-}
+  const [namespaces, setNamespaces] = useState([]);
+  const [appState, setAppState] = useState("initial");
 
-export default App
+  const handleLogin = () => {
+	setAppState("loading")
+	ipcRenderer.send("login");
+  }
+
+  const handleNamespaceGetDetails = (namespaceName) => {
+	ipcRenderer.send("namespace-details:load", namespaceName);
+
+	ipcRenderer.on("namespace-details:get", (e, response) => {
+		const namespaceDetails = JSON.parse(response).data[0]
+		
+		const result = namespaces
+		  .map((item) => {
+			if(item.name === namespaceDetails.name) {
+				const that = {
+					...item,
+					...namespaceDetails
+				};
+
+				console.log(that)
+
+				return that
+			}
+			
+			return {
+			  ...item
+			};
+		  });
+  
+		setNamespaces(result);
+		setAppState("ready")
+	  });
+  }
+
+  const retrieveNamespaces = () => {
+	ipcRenderer.send("namespaces:load");
+
+	ipcRenderer.on("namespaces:get", (e, namespaces) => {
+		const result = JSON.parse(namespaces)
+		  .data
+		  .slice(1, 11)
+		  .map((item) => {
+			return {
+			  ...item,
+			  slack: item.slack.split("(")[0],
+			};
+		  });
+  
+		setNamespaces(result);
+		setAppState("ready")
+	  });
+  }
+
+  useEffect(() => {
+	ipcRenderer.on("login:success", (e) => {
+		retrieveNamespaces()
+	})
+
+	ipcRenderer.on("logout", (e) => {
+		console.log("Logged out...")
+		setAppState("")
+	})
+  }, []);
+
+  return <Layout namespaces={namespaces} onLogin={handleLogin} onNamespaceGetDetails={handleNamespaceGetDetails} appState={appState} />;
+};
+
+export default App;
