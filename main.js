@@ -1,12 +1,21 @@
 const path = require("path");
 const url = require("url");
-const { app, BrowserWindow, Tray } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const AppTray = require('./utils/AppTray')
+const { login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl')
 
 const isDev = process.env.NODE_ENV === "development";
 const appState = {
   active: false,
 };
+
+const sendNamespaces = (mainWindow, data) => {
+  mainWindow.webContents.send('namespaces:get', JSON.stringify(data))
+}
+
+const sendNamespaceDetails = (mainWindow, data) => {
+  mainWindow.webContents.send('namespace-details:get', JSON.stringify(data))
+}
 
 const getIndexPath = () => {
   if (isDev && process.argv.indexOf("--noDevServer") === -1) {
@@ -72,6 +81,37 @@ app.on("ready", () => {
     }
 
     return true
+  })
+
+  ipcMain.on('namespaces:load', async (e) => {
+    try {
+      const namespaces = await getNamespaces()
+      sendNamespaces(mainWindow, namespaces)
+    } catch (err) {
+      console.error(err)
+    }
+  })
+
+  ipcMain.on('namespace-details:load', async (e, namespaceName) => {
+    try {
+      const namespaceDetails = await getNamespaceDetails(namespaceName)
+      sendNamespaceDetails(mainWindow, namespaceDetails)
+    } catch (err) {
+      console.error(err)
+    }
+  })
+
+  ipcMain.on('login', async (e, item) => {
+    try {
+      await login()
+      mainWindow.webContents.send('login:success')
+
+      setTimeout(() => {
+        mainWindow.webContents.send('logout')
+      }, 3600 * 1000)
+    } catch (err) {
+      console.error(err)
+    }
   })
 
   const icon = path.join(__dirname, 'assets', 'icons', 'tray-icon.png')

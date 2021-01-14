@@ -61,9 +61,9 @@ const getNamespaces = () => {
             });
 
 
-            const stringifiedJson = JSON.stringify(data)
+            // const stringifiedJson = JSON.stringify(data)
             // console.log(`stdout: ${stdout}`);
-            console.log(`${stringifiedJson}`);
+            // console.log(`${stringifiedJson}`);
             resolve({
                 success: true,
                 data: data
@@ -96,7 +96,6 @@ const getNamespaceDetails = (namespace) => {
             const result = JSON.parse(stdout);
             
 
-
             const data = result.items.map(item => {
                 const newReplicaSetCondition = item.status.conditions.find(
                     element => element.reason === "NewReplicaSetAvailable"
@@ -113,12 +112,15 @@ const getNamespaceDetails = (namespace) => {
                     "service": item.metadata.labels['app.kubernetes.io/name'],
                     "pods": item.status.replicas,
                     "ready-pods": item.status.readyReplicas,
-                    "lastDeployed": lastDeployed  
+                    "last-deployed": lastDeployed,
+                    "name": namespace
                 }
             });
+                
             const stringifiedJson = JSON.stringify(data)
             // console.log(`stdout: ${stdout}`);
-            console.log(`${stringifiedJson}`);
+            console.log(`data ${stringifiedJson}`);
+            
             resolve({
                 success: true,
                 data: data
