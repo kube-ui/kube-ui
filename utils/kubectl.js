@@ -1,4 +1,5 @@
 const { exec } = require("child_process");
+const { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } = require("constants");
 
 const login = () => {
     return new Promise(function(resolve, reject){
@@ -93,15 +94,26 @@ const getNamespaceDetails = (namespace) => {
             }
 
             const result = JSON.parse(stdout);
+            
+
 
             const data = result.items.map(item => {
+                const newReplicaSetCondition = item.status.conditions.find(
+                    element => element.reason === "NewReplicaSetAvailable"
+                )
+                
+                var lastDeployed
+                if (newReplicaSetCondition != undefined) {
+                    lastDeployed = newReplicaSetCondition.lastUpdateTime
+                } else {
+                    lastDeployed = items.metadata.creationTimestamp
+                }
+
                 return {
                     "service": item.metadata.labels['app.kubernetes.io/name'],
                     "pods": item.status.replicas,
                     "ready-pods": item.status.readyReplicas,
-                    "lastDeployed": item.status.conditions.find(
-                        element => element.reason === "NewReplicaSetAvailable"
-                        ).lastUpdateTime  
+                    "lastDeployed": lastDeployed  
                 }
             });
             const stringifiedJson = JSON.stringify(data)
