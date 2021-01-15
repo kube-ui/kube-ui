@@ -3,30 +3,30 @@ const { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } = require("constants");
 
 const login = () => {
     return new Promise(function(resolve, reject){
-        // exec("osprey user login", (error, stdout, stderr) => {
-        //     if (error) {
-        //         console.error(`Error logging in with osprey: ${error.message}`);
-        //         reject({
-        //             success: false,
-        //             error: error.message
-        //         })
-        //         return;
-        //     }
+        exec("osprey user login", (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error logging in with osprey: ${error.message}`);
+                reject({
+                    success: false,
+                    error: error.message
+                })
+                return;
+            }
             
-        //     // if (stderr) {
-        //     //     console.error(`stderr: ${stderr}`);
-        //     //     reject({
-        //     //         success: false,
-        //     //         error: stderr
-        //     //     })
-        //     //     return;
-        //     // }
+            // if (stderr) {
+            //     console.error(`stderr: ${stderr}`);
+            //     reject({
+            //         success: false,
+            //         error: stderr
+            //     })
+            //     return;
+            // }
             
-        //     console.log(`stdout: ${stdout}`);
+            console.log(`stdout: ${stdout}`);
             resolve({
                 success: true
             })       
-        // });  
+        });  
      })
 }
 
