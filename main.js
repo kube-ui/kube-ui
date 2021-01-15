@@ -3,11 +3,27 @@ const url = require("url");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const AppTray = require('./utils/AppTray')
 const { login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl')
+const Store = require('./utils/Store')
 
 const isDev = process.env.NODE_ENV === "development";
 const appState = {
+  tray: null,
   active: false,
 };
+
+const store = new Store({
+  configName: 'user-settings',
+  defaults: {
+    settings: {
+      lastLoginTimestamp: 0
+    },
+  },
+})
+
+const isLoggedIn = () => {
+  const timeElapsedSinceLastLogin = ((+new Date()) - store.get('lastLoginTimestamp')) / 1000
+  return (timeElapsedSinceLastLogin / 3600) < 1
+}
 
 const sendNamespaces = (mainWindow, data) => {
   mainWindow.webContents.send('namespaces:get', JSON.stringify(data))
@@ -51,6 +67,10 @@ const createMainWindow = () => {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
 
+    if(isLoggedIn()) {
+      mainWindow.webContents.send('login:success')
+    }
+    
     if (isDev) {
       // Open devtools
       const {
@@ -106,6 +126,8 @@ app.on("ready", () => {
       await login()
       mainWindow.webContents.send('login:success')
 
+      store.set('lastLoginTimestamp', +new Date())
+
       setTimeout(() => {
         mainWindow.webContents.send('logout')
       }, 3600 * 1000)
@@ -115,7 +137,7 @@ app.on("ready", () => {
   })
 
   const icon = path.join(__dirname, 'assets', 'icons', 'tray-icon.png')
-  new AppTray(icon, mainWindow)
+  appState.tray = new AppTray(icon, mainWindow)
 });
 
 app.on("window-all-closed", () => {
