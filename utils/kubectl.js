@@ -1,9 +1,28 @@
 const { exec } = require("child_process");
 const { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } = require("constants");
 
-const login = () => {
+const getContext = (environments, defaultEnvironment) => {
+    if(environments[defaultEnvironment]) {
+        const [ context, namespace ] = environments[defaultEnvironment].split(':')
+
+        return {
+            context,
+            namespace
+        }
+    }
+
+    return {
+        context: 'dev'
+    }
+}
+
+const login = (loginCommand) => {
+    if(!loginCommand) {
+        return
+    }
+
     return new Promise(function(resolve, reject){
-        exec("osprey user login", (error, stdout, stderr) => {
+        exec(`${loginCommand}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error logging in with osprey: ${error.message}`);
                 reject({
@@ -12,17 +31,7 @@ const login = () => {
                 })
                 return;
             }
-            
-            // if (stderr) {
-            //     console.error(`stderr: ${stderr}`);
-            //     reject({
-            //         success: false,
-            //         error: stderr
-            //     })
-            //     return;
-            // }
-            
-            console.log(`stdout: ${stdout}`);
+
             resolve({
                 success: true
             })       
@@ -30,9 +39,9 @@ const login = () => {
      })
 }
 
-const getNamespaces = () => {
+const getNamespaces = (kubectlAlias, context) => {
     return new Promise(function(resolve, reject){
-        exec("kubectl --context=dev get namespaces -o json", {maxBuffer: 1024 * 5000}, (error, stdout, stderr) => {
+        exec(`${kubectlAlias} --context=${context} get namespaces -o json`, {maxBuffer: 1024 * 5000}, (error, stdout, stderr) => {
             if (error) {
                 console.log(`error: ${error.message}`);
                 reject({
@@ -50,31 +59,24 @@ const getNamespaces = () => {
 
             const result = JSON.parse(stdout);
 
-
-            const data = result.items.map(item => {
-                return {
-                    "name": item.metadata.name,
-                    "team": item.metadata.labels.team,
-                    "area": item.metadata.labels['area-name'],
-                    "slack": item.metadata.annotations.slack    
-                }
-            });
-
-
-            // const stringifiedJson = JSON.stringify(data)
-            // console.log(`stdout: ${stdout}`);
-            // console.log(`${stringifiedJson}`);
             resolve({
                 success: true,
-                data: data
+                data: result.items.map(item => {
+                    return {
+                        "name": item.metadata.name,
+                        "team": item.metadata.labels.team,
+                        "area": item.metadata.labels['area-name'],
+                        "slack": item.metadata.annotations.slack    
+                    }
+                })
             });
         });
     });
 }
 
-const getNamespaceDetails = (namespace) => {
+const getNamespaceDetails = (kubectlAlias, context, namespace) => {
     return new Promise(function(resolve, reject){
-        exec(`kubectl --context=dev --namespace=${namespace} get deployments -o json`, {maxBuffer: 1024 * 5000}, (error, stdout, stderr) => {
+        exec(`${kubectlAlias} --context=${context} --namespace=${namespace} get deployments -o json`, {maxBuffer: 1024 * 5000}, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error reading deployments from kubernetes: ${error.message}`);
                 reject({
@@ -116,10 +118,6 @@ const getNamespaceDetails = (namespace) => {
                     "name": namespace
                 }
             });
-                
-            const stringifiedJson = JSON.stringify(data)
-            // console.log(`stdout: ${stdout}`);
-            console.log(`data ${stringifiedJson}`);
             
             resolve({
                 success: true,
@@ -129,9 +127,9 @@ const getNamespaceDetails = (namespace) => {
     });
 }
 
-const getPods = (namespace) => {
+const getPods = (kubectlAlias, context, namespace) => {
     return new Promise(function(resolve, reject){
-        exec(`kubectl --context=dev --namespace=${namespace} get po -o json`, (error, stdout, stderr) => {
+        exec(`${kubectlAlias} --context=${context} --namespace=${namespace} get po -o json`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error reading deployments from kubernetes: ${error.message}`);
                 reject({
@@ -159,9 +157,7 @@ const getPods = (namespace) => {
                     "startTime": item.status.startTime  
                 }
             });
-            
-            const stringifiedJson = JSON.stringify(data)
-            console.log(stringifiedJson)
+
             resolve({
                 success: true,
                 data: data
@@ -171,6 +167,7 @@ const getPods = (namespace) => {
 }
 
 module.exports = {
+    getContext,
     login,
     getNamespaces,
     getNamespaceDetails,

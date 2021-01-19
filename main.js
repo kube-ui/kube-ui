@@ -1,9 +1,21 @@
 const path = require("path");
 const url = require("url");
 const { app, BrowserWindow, ipcMain } = require("electron");
-const AppTray = require('./utils/AppTray')
-const { login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl')
-const Store = require('./utils/Store')
+const AppTray = require('./utils/AppTray');
+const { getContext, login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl');
+const { parseDataFile } = require('./utils/files');
+const Store = require('./utils/Store');
+const os = require('os');
+const slash = require('slash');
+
+const userConfigPath = path.join(os.homedir(), "kubeui", "config.json")
+const userConfig = parseDataFile(slash(userConfigPath), {})
+
+const environments = userConfig.environments || {}
+const defaultEnvironment = userConfig['default-environment'] || null
+const { context, namespace } = getContext(environments, defaultEnvironment)
+const kubectlAlias = userConfig.kubectl && userConfig.kubectl.alias ? userConfig.kubectl.alias : 'kubectl'
+const authenticationEnabled = !!userConfig.authentication
 
 const isDev = process.env.NODE_ENV === "development";
 const appState = {
@@ -67,8 +79,10 @@ const createMainWindow = () => {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
 
-    if(isLoggedIn()) {
+    if(!authenticationEnabled || isLoggedIn()) {
       mainWindow.webContents.send('login:success')
+    } else if(authenticationEnabled && !userConfig.authentication[defaultEnvironment]) {
+      mainWindow.webContents.send('error:auth-mismatch')
     }
     
     if (isDev) {
@@ -105,7 +119,7 @@ app.on("ready", () => {
 
   ipcMain.on('namespaces:load', async (e) => {
     try {
-      const namespaces = await getNamespaces()
+      const namespaces = await getNamespaces(kubectlAlias, context)
       sendNamespaces(mainWindow, namespaces)
     } catch (err) {
       console.error(err)
@@ -114,7 +128,7 @@ app.on("ready", () => {
 
   ipcMain.on('namespace-details:load', async (e, namespaceName) => {
     try {
-      const namespaceDetails = await getNamespaceDetails(namespaceName)
+      const namespaceDetails = await getNamespaceDetails(kubectlAlias, context, namespaceName)
       sendNamespaceDetails(mainWindow, namespaceDetails)
     } catch (err) {
       console.error(err)
@@ -123,7 +137,8 @@ app.on("ready", () => {
 
   ipcMain.on('login', async (e, item) => {
     try {
-      await login()
+      const loginCommand = userConfig.authentication && defaultEnvironment ? userConfig.authentication[defaultEnvironment] : false
+      await login(loginCommand)
       mainWindow.webContents.send('login:success')
 
       store.set('lastLoginTimestamp', +new Date())
