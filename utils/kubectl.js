@@ -1,18 +1,18 @@
 const { exec } = require("child_process");
 const { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } = require("constants");
 
-const getContext = (environments, defaultEnvironment) => {
+const getDefaultContext = (environments, defaultEnvironment) => {
     if(environments[defaultEnvironment]) {
-        const [ context, namespace ] = environments[defaultEnvironment].split(':')
+        const [ defaultContext, defaultNamespace ] = environments[defaultEnvironment].split(':')
 
         return {
-            context,
-            namespace
+            defaultContext,
+            defaultNamespace
         }
     }
 
     return {
-        context: 'dev'
+        defaultContext: 'dev'
     }
 }
 
@@ -167,7 +167,7 @@ const getPods = (kubectlAlias, context, namespace) => {
 }
 
 module.exports = {
-    getContext,
+    getDefaultContext,
     login,
     getNamespaces,
     getNamespaceDetails,

@@ -2,7 +2,7 @@ const path = require("path");
 const url = require("url");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const AppTray = require('./utils/AppTray');
-const { getContext, login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl');
+const { getDefaultContext, login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl');
 const { parseDataFile } = require('./utils/files');
 const Store = require('./utils/Store');
 const os = require('os');
@@ -13,7 +13,7 @@ const userConfig = parseDataFile(slash(userConfigPath), {})
 
 const environments = userConfig.environments || {}
 const defaultEnvironment = userConfig['default-environment'] || null
-const { context, namespace } = getContext(environments, defaultEnvironment)
+const { defaultContext, defaultNamespace } = getDefaultContext(environments, defaultEnvironment)
 const kubectlAlias = userConfig.kubectl && userConfig.kubectl.alias ? userConfig.kubectl.alias : 'kubectl'
 const authenticationEnabled = !!userConfig.authentication
 
@@ -119,8 +119,13 @@ app.on("ready", () => {
 
   ipcMain.on('namespaces:load', async (e) => {
     try {
-      const namespaces = await getNamespaces(kubectlAlias, context)
-      sendNamespaces(mainWindow, namespaces)
+      const namespaces = await getNamespaces(kubectlAlias, defaultContext)
+      sendNamespaces(
+        mainWindow, 
+        namespaces.data
+          .filter(namespace => !defaultNamespace || namespace.name.includes(defaultNamespace))
+          .slice(1, 10)
+      )
     } catch (err) {
       console.error(err)
     }
@@ -128,7 +133,7 @@ app.on("ready", () => {
 
   ipcMain.on('namespace-details:load', async (e, namespaceName) => {
     try {
-      const namespaceDetails = await getNamespaceDetails(kubectlAlias, context, namespaceName)
+      const namespaceDetails = await getNamespaceDetails(kubectlAlias, defaultContext, namespaceName)
       sendNamespaceDetails(mainWindow, namespaceDetails)
     } catch (err) {
       console.error(err)
