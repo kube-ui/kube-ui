@@ -22,9 +22,9 @@ An environment should be the combination on a context and namespace. The context
 }
 ```
 
-**Override defaults:**  
+**Define background cli tools:**  
 
-By default `kubectl` is used to run commands, define cli alias:
+Define cli alias:
 ```
 {
     ...
@@ -35,7 +35,7 @@ By default `kubectl` is used to run commands, define cli alias:
 }
 ```
 
-By default Kubernetes authentication is disabled, enable authentication:
+Enable authentication:
 ```
 {
     ...
@@ -51,11 +51,14 @@ By default Kubernetes authentication is disabled, enable authentication:
  {
      "environments": {
          "client-int": "dev:client-int"
-     },         
+     },
      "default-environment": "client-int",
+     "kubectl": {
+         "alias": "/usr/local/bin/kubectl"
+      },
      "authentication": {
-         "client-int": "osprey user login"
-     }          
+         "client-int": "/usr/local/bin/osprey user login"
+     }
  }
 ```
 

@@ -71,6 +71,10 @@ const App = () => {
 		console.log("Logged out...")
 		setAppState("")
 	})
+
+	ipcRenderer.on("error", (e, response) => {
+		alert(JSON.stringify(response))
+	})
   }, []);
 
   return <Layout namespaces={namespaces} onLogin={handleLogin} onNamespaceGetDetails={handleNamespaceGetDetails} appState={appState} />;

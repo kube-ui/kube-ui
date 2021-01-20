@@ -7,6 +7,7 @@ const { parseDataFile } = require('./utils/files');
 const Store = require('./utils/Store');
 const os = require('os');
 const slash = require('slash');
+const log = require('electron-log');
 
 const userConfigPath = path.join(os.homedir(), "kubeui", "config.json")
 const userConfig = parseDataFile(slash(userConfigPath), {})
@@ -64,7 +65,7 @@ const getIndexPath = () => {
 
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: isDev ? 1400 : 1100,
+    width: 1400,
     height: 800,
     show: false,
     icon: `${__dirname}/assets/icons/icon.png`,
@@ -82,7 +83,7 @@ const createMainWindow = () => {
     if(!authenticationEnabled || isLoggedIn()) {
       mainWindow.webContents.send('login:success')
     } else if(authenticationEnabled && !userConfig.authentication[defaultEnvironment]) {
-      mainWindow.webContents.send('error:auth-mismatch')
+      mainWindow.webContents.send('error', `Please define an authentication method for ${defaultEnvironment}`)
     }
     
     if (isDev) {
@@ -127,7 +128,9 @@ app.on("ready", () => {
           .slice(1, 10)
       )
     } catch (err) {
+      log.error(`namespaces:load ${err}`)
       console.error(err)
+      mainWindow.webContents.send('error', err)
     }
   })
 
@@ -136,7 +139,9 @@ app.on("ready", () => {
       const namespaceDetails = await getNamespaceDetails(kubectlAlias, defaultContext, namespaceName)
       sendNamespaceDetails(mainWindow, namespaceDetails)
     } catch (err) {
+      log.error(`namespace-details:load ${err}`)
       console.error(err)
+      mainWindow.webContents.send('error', err)
     }
   })
 
@@ -152,7 +157,9 @@ app.on("ready", () => {
         mainWindow.webContents.send('logout')
       }, 3600 * 1000)
     } catch (err) {
+      log.error(`login ${err}`)
       console.error(err)
+      mainWindow.webContents.send('error', err)
     }
   })
 
