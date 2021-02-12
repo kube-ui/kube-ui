@@ -1,6 +1,8 @@
+import { Content, ContentSwitch, EmptyContent } from "./components/content.js";
 import React, { useEffect, useState } from "react";
 
-import { Button } from "@material-ui/core";
+import { Grid } from "@material-ui/core";
+import Item from "./components/item.js";
 import Layout from "./components/layout.js";
 import { ipcRenderer } from "electron";
 
@@ -15,21 +17,16 @@ const App = () => {
 
   const handleNamespaceGetDetails = (namespaceName) => {
 	ipcRenderer.send("namespace-details:load", namespaceName);
-
 	ipcRenderer.on("namespace-details:get", (e, response) => {
 		const namespaceDetails = JSON.parse(response).data[0]
 		
 		const result = namespaces
 		  .map((item) => {
 			if(item.name === namespaceDetails.name) {
-				const that = {
+				return {
 					...item,
 					...namespaceDetails
 				};
-
-				console.log(that)
-
-				return that
 			}
 			
 			return {
@@ -44,7 +41,6 @@ const App = () => {
 
   const retrieveNamespaces = () => {
 	ipcRenderer.send("namespaces:load");
-
 	ipcRenderer.on("namespaces:get", (e, namespaces) => {
 		const result = JSON.parse(namespaces)
 		  .map((item) => {
@@ -77,7 +73,27 @@ const App = () => {
 	})
   }, []);
 
-  return <Layout namespaces={namespaces} onLogin={handleLogin} onNamespaceGetDetails={handleNamespaceGetDetails} appState={appState} />;
+  const loadingState = () => (<EmptyContent text={"Loading..."} />)
+  const defaultState = () => (<EmptyContent text={"Login"} action={handleLogin} />)
+  const ready = () => (
+	<Content>
+		{namespaces.map((item, index) => (
+			<Grid key={index} item xs={4} className="namespace-item">
+				<Item item={item} onNamespaceGetDetails={handleNamespaceGetDetails} />
+			</Grid>
+		))}
+	</Content>
+  )
+
+  return (
+    <Layout onLogin={handleLogin} >
+		<ContentSwitch state={appState} contentMap={{
+			loading: loadingState,
+			ready: ready,
+			default: defaultState,
+		}} />
+    </Layout>
+  );
 };
 
 export default App;
