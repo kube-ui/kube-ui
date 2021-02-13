@@ -2,26 +2,26 @@ const path = require("path");
 const url = require("url");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const AppTray = require('./utils/AppTray');
-const { getDefaultContext, login, getNamespaces, getNamespaceDetails } = require('./utils/kubectl');
+const { Kubectl } = require('./utils/kubectl');
 const { parseDataFile } = require('./utils/files');
 const Store = require('./utils/Store');
 const os = require('os');
 const slash = require('slash');
 const log = require('electron-log');
 
+const isDev = process.env.NODE_ENV === "development";
+
 const userConfigPath = path.join(os.homedir(), "kubeui", "config.json")
 const userConfig = parseDataFile(slash(userConfigPath), {})
 
-const environments = userConfig.environments || {}
-const defaultEnvironment = userConfig['default-environment'] || null
-const { defaultContext, defaultNamespace } = getDefaultContext(environments, defaultEnvironment)
-const kubectlAlias = userConfig.kubectl && userConfig.kubectl.alias ? userConfig.kubectl.alias : 'kubectl'
-const authenticationEnabled = !!userConfig.authentication
+const kubectl = new Kubectl(userConfig)
+const { defaultContext, defaultNamespace } = kubectl.getDefaultContext()
 
-const isDev = process.env.NODE_ENV === "development";
 const appState = {
   tray: null,
   active: false,
+  context: defaultContext,
+  namespace: defaultNamespace
 };
 
 const store = new Store({
@@ -80,10 +80,10 @@ const createMainWindow = () => {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
 
-    if(!authenticationEnabled || isLoggedIn()) {
+    if(!kubectl.isAuthenticationEnabled() || isLoggedIn()) {
       mainWindow.webContents.send('login:success')
-    } else if(authenticationEnabled && !userConfig.authentication[defaultEnvironment]) {
-      mainWindow.webContents.send('error', `Please define an authentication method for ${defaultEnvironment}`)
+    } else if(kubectl.isAuthenticationEnabled() && !userConfig.authentication[kubectl.defaultEnvironment()]) {
+      mainWindow.webContents.send('error', `Please define an authentication method for ${kubectl.defaultEnvironment()}`)
     }
     
     if (isDev) {
@@ -118,13 +118,13 @@ app.on("ready", () => {
     return true
   })
 
-  ipcMain.on('namespaces:load', async (e) => {
+  ipcMain.on('namespaces:load', async () => {
     try {
-      const namespaces = await getNamespaces(kubectlAlias, defaultContext)
+      const namespaces = await kubectl.getNamespaces(appState.context)
       sendNamespaces(
         mainWindow, 
         namespaces.data
-          .filter(namespace => !defaultNamespace || namespace.name.includes(defaultNamespace))
+          .filter(namespace => !appState.namespace || namespace.name.includes(appState.namespace))
           .slice(1, 10)
       )
     } catch (err) {
@@ -136,7 +136,7 @@ app.on("ready", () => {
 
   ipcMain.on('namespace-details:load', async (e, namespaceName) => {
     try {
-      const namespaceDetails = await getNamespaceDetails(kubectlAlias, defaultContext, namespaceName)
+      const namespaceDetails = await kubectl.getNamespaceDetails(appState.context, namespaceName)
       sendNamespaceDetails(mainWindow, namespaceDetails)
     } catch (err) {
       log.error(`namespace-details:load ${err}`)
@@ -145,17 +145,14 @@ app.on("ready", () => {
     }
   })
 
-  ipcMain.on('login', async (e, item) => {
+  ipcMain.on('login', async () => {
     try {
-      const loginCommand = userConfig.authentication && defaultEnvironment ? userConfig.authentication[defaultEnvironment] : false
-      await login(loginCommand)
+      await kubectl.login()
       mainWindow.webContents.send('login:success')
 
       store.set('lastLoginTimestamp', +new Date())
 
-      setTimeout(() => {
-        mainWindow.webContents.send('logout')
-      }, 3600 * 1000)
+      kubectl.loginTimeout(() => mainWindow.webContents.send('logout'))
     } catch (err) {
       log.error(`login ${err}`)
       console.error(err)
@@ -178,6 +175,5 @@ app.on("activate", () => {
     createMainWindow();
   }
 });
-
 
 app.allowRendererProcessReuse = true;

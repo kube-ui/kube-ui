@@ -16,28 +16,49 @@ const getDefaultContext = (environments, defaultEnvironment) => {
     }
 }
 
+const execCommand = (command) => {
+  return new Promise(function (resolve, reject) {
+    exec(command, { maxBuffer: 1024 * 5000 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      }
+
+      if (stderr) {
+        reject({
+          name: 'stderr',
+          message: stderr,
+        });
+      }
+
+      resolve(JSON.parse(stdout));
+    });
+  });
+};
+
 const login = (loginCommand) => {
-    if(!loginCommand) {
-        return
+  return new Promise(function (resolve, reject) {
+    if (!loginCommand) {
+      resolve({
+        success: true,
+      });
     }
 
-    return new Promise(function(resolve, reject){
-        exec(`${loginCommand}`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error logging in with osprey: ${error.message}`);
-                reject({
-                    success: false,
-                    error: error.message
-                })
-                return;
-            }
+    exec(`${loginCommand}`, (error) => {
+      if (error) {
+        console.error(`Error logging in with osprey: ${error.message}`);
+        reject({
+          success: false,
+          error: error.message,
+        });
+        return;
+      }
 
-            resolve({
-                success: true
-            })       
-        });  
-     })
-}
+      resolve({
+        success: true,
+      });
+    });
+  });
+};
 
 const getNamespaces = (kubectlAlias, context) => {
     return new Promise(function(resolve, reject){
@@ -166,10 +187,50 @@ const getPods = (kubectlAlias, context, namespace) => {
     });
 }
 
+class Kubectl {
+  constructor(userConfig) {
+    const defaultEnvironment = userConfig["default-environment"] || null;
+    
+    this.loginCommand =
+      userConfig.authentication && defaultEnvironment
+        ? userConfig.authentication[defaultEnvironment]
+        : null;
+        
+    this.kubectlAlias =
+      userConfig.kubectl && userConfig.kubectl.alias
+        ? userConfig.kubectl.alias
+        : "kubectl";
+
+    this.userConfig = userConfig;
+  }
+
+  isAuthenticationEnabled = () => !!this.userConfig.authentication;
+  defaultEnvironment = () => this.userConfig['default-environment'] || null
+  environments = () => this.userConfig.environments || {}
+
+  getDefaultContext() {
+    return getDefaultContext(this.environments(), this.defaultEnvironment())
+  }
+
+  login() {
+    return login(this.loginCommand);
+  }
+
+  async getNamespaces(context) {
+    return getNamespaces(this.kubectlAlias, context);
+  }
+
+  async getNamespaceDetails(context, namespace) {
+    return getNamespaceDetails(this.kubectlAlias, context, namespace);
+  }
+
+  loginTimeout(callback) {
+    setTimeout(() => {
+        callback()
+    }, 3600 * 1000);
+  }
+}
+
 module.exports = {
-    getDefaultContext,
-    login,
-    getNamespaces,
-    getNamespaceDetails,
-    getPods
+    Kubectl
 }

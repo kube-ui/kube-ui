@@ -17,75 +17,9 @@ const useContentStyles = makeStyles((theme) => ({
 
 const Content = ({ children }) => {
     const classes = useContentStyles()
-    
-    // const [age, setAge] = React.useState('');
-    // const handleChange = (event) => {
-    //   setAge(event.target.value);
-    // };
 
     return (
       <div className="app-body">
-        {/* <Grid container justify="center" spacing={2} className="filter-container">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <FormControl className={classes.margin}>
-                <Select
-                  labelId="demo-customized-select-label"
-                  id="demo-customized-select"
-                  value={age}
-                  onChange={handleChange}
-                  input={<BootstrapInput />}
-                >
-                  <MenuItem value="" disabled>
-                    Area
-                  </MenuItem>
-                  <MenuItem value={10}>Ten</MenuItem>
-                  <MenuItem value={20}>Twenty</MenuItem>
-                  <MenuItem value={30}>Thirty</MenuItem>
-                </Select>
-              </FormControl>
-  
-              <FormControl className={classes.margin}>
-                <Select
-                  labelId="demo-customized-select-label"
-                  id="demo-customized-select"
-                  value={age}
-                  onChange={handleChange}
-                  input={<BootstrapInput />}
-                >
-                  <MenuItem value="" disabled>
-                    Team
-                  </MenuItem>
-                  <MenuItem value={10}>Ten</MenuItem>
-                  <MenuItem value={20}>Twenty</MenuItem>
-                  <MenuItem value={30}>Thirty</MenuItem>
-                </Select>
-              </FormControl>
-  
-              <FormControl className={classes.margin}>
-                <Select
-                  labelId="demo-customized-select-label"
-                  id="demo-customized-select"
-                  value={age}
-                  onChange={handleChange}
-                  input={<BootstrapInput />}
-                >
-                  <MenuItem value="" disabled>
-                    Environment
-                  </MenuItem>
-                  <MenuItem value={10}>Ten</MenuItem>
-                  <MenuItem value={20}>Twenty</MenuItem>
-                  <MenuItem value={30}>Thirty</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <div className="filters-right">
-                <TextField id="outlined-basic" label="Outlined" variant="outlined" />
-              </div>
-            </Paper>
-          </Grid>
-        </Grid> */}
-
         <Grid container className={classes.root} justify="center" spacing={2}>
           <Grid item xs={12}>
             <Grid container spacing={2}>
