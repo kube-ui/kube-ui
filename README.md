@@ -71,6 +71,16 @@ npm run package #for mac
 
 ## Development
 
+### Dependencies
+
+Install dependencies:
+```
+npm install
+npm run packages:install
+```
+
+### Running the app
+
 Run the app in development mode:
 ```
 npm start
@@ -80,3 +90,28 @@ Run the app in production mode:
 ```
 npm run production
 ```
+
+### Tests
+
+Run the unit tests:
+```
+npm test
+```
+
+### Manage packages
+
+Kube-ui is made up of several small projects that are tied together thanks to `Lerna`.  
+`Lerna` is a tool to manage these packages by bootstraping them together as if the packages were already existing and available in your node_modules folder.  
+`Lerna` has been configured to use the Github package registry.
+
+* Check which packages have changed since the last release `npx lerna changed`.
+* List all of the public packages in the current Lerna repo `npx lerna ls`.
+
+### How to create a new package
+
+### How to update a package
+
+1. Commit changes
+2. Publish package updates `npm run packages:publish`
+3. Install package updates where needed `npm run packages:install`
+4. Push changes `git push origin --tags`

@@ -1,0 +1,34 @@
+{
+  "name": "@kube-ui/exec",
+  "version": "0.0.0",
+  "description": "Wrap cli command execution in a Javascript promise.",
+  "author": "Samir Benzenine <samir.benzenine@sky.uk",
+  "homepage": "https://github.com/sky-uk/kube-ui#readme",
+  "license": "MIT",
+  "main": "lib/exec.js",
+  "devDependencies": {
+    "chai": "^4.3.0",
+    "mocha": "^8.3.0",
+    "nyc": "^15.1.0",
+    "stub-spawn-once": "^2.3.0"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sky-uk/kube-ui.git"
+  },
+  "scripts": {
+    "test": "mocha __tests__",
+    "test-with-coverage": "nyc --reporter=text mocha __tests__"
+  },
+  "bugs": {
+    "url": "https://github.com/sky-uk/kube-ui/issues"
+  },
+  "gitHead": "3a179714855094357e5bf94f02a3ce14f798d736"
+}
