@@ -1,6 +1,6 @@
 {
   "name": "@kube-ui/exec",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Wrap cli command execution in a Javascript promise.",
   "author": "Samir Benzenine <samir.benzenine@sky.uk",
   "homepage": "https://github.com/kube-ui/kube-ui#readme",
